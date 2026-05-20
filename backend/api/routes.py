@@ -155,13 +155,29 @@ async def analyze_document(request: Request, document_id: str, language: str = "
 async def chat_general(request: ChatRequest):
     """General legal chat — no document context."""
     try:
-        history = [{"role": msg.role, "message": msg.message} for msg in request.chat_history]
-        text = generate_chat_response({}, history, request.user_message, request.language)
+        # Validate user message is not empty
+        if not request.user_message or not request.user_message.strip():
+            raise HTTPException(status_code=400, detail="Message cannot be empty")
+
+        analysis = request.document_analysis or {}
+
+        history = [
+            {"role": msg.role, "message": msg.message}
+            for msg in request.chat_history
+        ]
+
+        text = generate_chat_response(
+            analysis,
+            history,
+            request.user_message,
+            request.language
+        )
+
         return ChatResponse(response=text)
+
     except Exception as e:
         logger.error(f"General chat failed: {e}")
         raise HTTPException(status_code=500, detail="Chat generation failed")
-
 
 @api_router.post("/chat/{document_id}", response_model=ChatResponse)
 async def chat_with_document(document_id: str, chat_request: ChatRequest, http_request: Request):
@@ -180,7 +196,7 @@ async def chat_with_document(document_id: str, chat_request: ChatRequest, http_r
         logger.error(f"Chat failed for document {document_id}: {e}")
         raise HTTPException(status_code=500, detail="Chat generation failed")
 
-
+        
 @api_router.delete("/documents/{document_id}")
 async def delete_document(document_id: str, request: Request):
     session_id = require_session_id(request)
