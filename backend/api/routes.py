@@ -158,7 +158,7 @@ async def analyze_document(request: Request, document_id: str, language: str = "
             filename = file.filename
 
         # 1. Extract Text
-        text = extract_document(contents)
+        text = extract_document(contents, filename, force_ocr=force_ocr)
 
         # 2. RAG Retrieval
         relevant_laws = retrieve_relevant_laws(text, k=3)
