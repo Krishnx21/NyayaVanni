@@ -12,6 +12,7 @@ import ReactMarkdown from 'react-markdown';
 import { useLanguage } from '../contexts/LanguageContext';
 import { ensureSessionId } from '../utils/session';
 import ThemeToggle from '../components/ThemeToggle';
+import { useDocumentHistory } from '../hooks/useDocumentHistory';
 
 export default function Dashboard() {
   const { t, language } = useLanguage();
@@ -19,6 +20,7 @@ export default function Dashboard() {
   const location = useLocation();
   const navigate = useNavigate();
   const file = location.state?.file;
+  const { saveToHistory } = useDocumentHistory();
 
   const [analysis, setAnalysis] = useState(null);
   const [knowledgeGraph, setKnowledgeGraph] = useState(null);
@@ -59,9 +61,16 @@ const [selectedType, setSelectedType] = useState('all');
           throw new Error(errData.detail || "Analysis request failed");
         }
         const data = await response.json();
-setAnalysis(data.analysis);
-setClassification(data.classification);
-setKnowledgeGraph(data.knowledge_graph);
+        setAnalysis(data.analysis);
+        setClassification(data.classification);
+        setKnowledgeGraph(data.knowledge_graph);
+        saveToHistory({
+          documentId,
+          fileName: file?.name || 'Unknown Document',
+          fileType: file?.type?.includes('pdf') ? 'PDF' : file?.type?.includes('image') ? 'Image' : 'Document',
+          riskLevel: data.analysis?.risk_level || data.classification?.risk_level || 'unknown',
+          analyzedAt: new Date().toISOString(),
+        });
       } catch (err) {
         console.error(err);
         const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';

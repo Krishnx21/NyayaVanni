@@ -5,6 +5,8 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { ensureSessionId } from '../utils/session';
 import ThemeToggle from '../components/ThemeToggle';
 import Footer from '../components/Footer';
+import { useDocumentHistory } from '../hooks/useDocumentHistory';
+import RecentDocuments from '../components/RecentDocuments';
 
 export default function LandingPage() {
   const { t } = useLanguage();
@@ -13,6 +15,7 @@ export default function LandingPage() {
   const [loading, setLoading] = useState(false);
   const inputRef = useRef(null);
   const navigate = useNavigate();
+  const { history, clearHistory } = useDocumentHistory();
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -246,7 +249,14 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
+        {/* Recent Documents History */}
+        {history.length > 0 && (
+          <div className="w-full max-w-lg mx-auto mt-8">
+            <RecentDocuments history={history} onClear={clearHistory} />
+          </div>
+        )}
       </main>
+
 
 
       {/* FAQ + Footer */}
