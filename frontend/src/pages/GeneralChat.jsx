@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Bot, User, Send, ArrowLeft, Scale } from "lucide-react";
+import { Bot, User, Send, ArrowLeft, Scale, Download } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useConversationHistory } from "../contexts/ConversationHistoryContext";
@@ -130,7 +130,6 @@ export default function GeneralChat() {
 
     try {
       const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
-      const sessionId = await ensureSessionId(apiUrl);
       const response = await fetch(`${apiUrl}/api/chat/general`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -235,6 +234,25 @@ export default function GeneralChat() {
     }
   };
 
+  const handleDownload = () => {
+    let content = "NyayaVanni Legal Assistant - Consultation History\n";
+    content += "=================================================\n\n";
+    chatHistory.forEach((msg) => {
+      const role = msg.role === "user" ? "You" : "NyayaVanni";
+      content += `[${role}]:\n${msg.message}\n\n`;
+    });
+
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `NyayaVanni_Consultation_${new Date().toISOString().slice(0, 10)}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 flex flex-col transition-colors duration-300">
       {/* Navigation Header */}
@@ -256,6 +274,13 @@ export default function GeneralChat() {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={handleDownload}
+              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white cursor-pointer"
+              title="Download Chat History"
+            >
+              <Download className="w-5 h-5" />
+            </button>
             {isSaving && (
               <span className="text-xs text-slate-500 dark:text-slate-400">
                 Saving...
@@ -277,7 +302,7 @@ export default function GeneralChat() {
         <main className="flex-1 w-full flex flex-col overflow-hidden">
           <div className="flex-1 p-4 sm:p-6 flex flex-col overflow-hidden">
             {/* Main Chat Container Block */}
-            <div className="flex-1 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col transition-colors duration-300">
+            <div className="flex-1 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col transition-colors duration-300 relative">
               {/* Scrollable Message Timeline Area */}
               <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 bg-slate-50/50 dark:bg-slate-950/20">
                 {chatHistory.map((msg, idx) => (
