@@ -30,10 +30,14 @@ from ..services.storage_service import (
     delete_document_and_cache,
     UPLOAD_DIR
 )
-from ..services.ocr_service import extract_document
-from ..services.rag_service import retrieve_relevant_laws
-from ..services.gemini_service import analyze_document_with_gemini, generate_chat_response, stream_chat_response
-from ..models.schemas import ChatRequest, ChatResponse
+from services.ocr_service import extract_document
+from services.rag_service import retrieve_relevant_laws
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+limiter = Limiter(key_func=get_remote_address)
+from services.gemini_service import analyze_document_with_gemini, generate_chat_response, stream_chat_response
+from models.schemas import ChatRequest, ChatResponse
 
 logger = logging.getLogger(__name__)
 
@@ -102,6 +106,7 @@ async def create_session(request: Request, response: Response):
 
 
 @api_router.post("/upload")
+@limiter.limit("10/minute")
 async def upload_document(request: Request, file: UploadFile = File(...)):
     """Upload document and return documentId"""
     try:

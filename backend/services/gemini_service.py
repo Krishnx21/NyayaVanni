@@ -18,6 +18,7 @@ from ..legal_processor import LegalQueryOptimizer
 
 
 logger = logging.getLogger(__name__)
+
 # Configure API key only if available
 api_key = os.getenv("GEMINI_API_KEY")
 if not api_key or not api_key.strip():
