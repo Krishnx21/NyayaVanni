@@ -1,11 +1,26 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 import os
+import asyncio
 from dotenv import load_dotenv
+from slowapi.middleware import SlowAPIMiddleware
+from middleware.rate_limit import limiter, rate_limit_handler
+from slowapi.errors import RateLimitExceeded
+from services.storage_service import cleanup_expired_documents
 
 load_dotenv()
 
 app = FastAPI(title="NyayaVanni API", description="Legal Document Analyzer API")
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
+app.add_middleware(SlowAPIMiddleware)
+
+@app.on_event("startup")
+async def startup_event():
+    asyncio.create_task(cleanup_expired_documents())
 
 # Configure CORS for React frontend
 app.add_middleware(
@@ -20,7 +35,7 @@ app.add_middleware(
 def read_root():
     return {"message": "NyayaVanni Backend API is running."}
 
-from api.routes import api_router
+from .api.routes import api_router
 app.include_router(api_router, prefix="/api")
 
 if __name__ == "__main__":

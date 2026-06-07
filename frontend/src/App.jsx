@@ -9,6 +9,8 @@ import ScamDetector from "./pages/ScamDetector";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import DocumentGenerator from "./pages/DocumentGenerator";
+import VersionDiff from "./pages/VersionDiff";
+import ContactUs from "./pages/ContactUs";
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ConversationHistoryProvider } from './contexts/ConversationHistoryContext';
@@ -44,16 +46,18 @@ function App() {
               <Route path="/faq" element={<FAQ />} />
               <Route path="/scam-detector" element={<ScamDetector />} />
               <Route path="/document-generator" element={<DocumentGenerator />} />
+              <Route path="/contact" element={<ContactUs />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms" element={<TermsOfService />} />
+              <Route path="/version-diff" element={<VersionDiff />} />
             </Routes>
             
             {/* Pinned Controls Layout */}
             <div className="fixed bottom-6 right-6 z-50">
               <LanguageToggle />
             </div>
-          </div>
-        </Router>
+            </div>
+          </Router>
         </ConversationHistoryProvider>
       </LanguageProvider>
     </ThemeProvider>

@@ -24,6 +24,7 @@ export default function GeneralChat() {
   const [currentConversationId, setCurrentConversationId] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const messagesEndRef = React.useRef(null);
+  const textareaRef = React.useRef(null);
 
   const [chatHistory, setChatHistory] = useState([
     {
@@ -129,9 +130,11 @@ export default function GeneralChat() {
 
     try {
       const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+      const sessionId = await ensureSessionId(apiUrl);
       const response = await fetch(`${apiUrl}/api/chat/general`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           user_message: userMsg.message,
           chat_history: currentHistory,
@@ -208,7 +211,28 @@ export default function GeneralChat() {
     if (!chatInput.trim()) return;
     const text = chatInput;
     setChatInput("");
+    if(textareaRef.current){
+      textareaRef.current.style.height = "auto";
+    }
     await submitMessage(text, chatHistory);
+  };
+
+  const handleInputChange = (e) => {
+    setChatInput(e.target.value);
+
+    const textarea = e.target;
+    textarea.style.height = "auto";
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 160)}px`;
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+
+      if (!chatInput.trim() || chatLoading) return;
+
+      handleChat(e);
+    }
   };
 
   return (
@@ -322,22 +346,43 @@ export default function GeneralChat() {
               {/* Form Message Submission Input Dock */}
               <form
                 onSubmit={handleChat}
-                className="p-3 sm:p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex gap-2 sm:gap-3 transition-colors duration-300"
+                className="p-3 sm:p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-end gap-2 sm:gap-3 transition-colors duration-300"
               >
-                <input
-                  type="text"
+                <textarea
+                  ref={textareaRef}
                   value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
+                  onChange={handleInputChange}
+                  onKeyDown={handleKeyDown}
                   placeholder={t("chat.placeholder")}
-                  className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:bg-white dark:focus:bg-slate-950 focus:border-nyaya-500 focus:ring-4 focus:ring-nyaya-500/10 rounded-full px-5 sm:px-6 outline-none transition-all py-3 sm:py-3.5 text-sm sm:text-base"
                   disabled={chatLoading}
+                  rows={1}
                   autoFocus
+                  className="
+                    chat-textarea
+                    flex-1
+                    resize-none
+                    overflow-y-auto
+                    bg-slate-50 dark:bg-slate-950
+                    border border-slate-200 dark:border-slate-800
+                    text-slate-900 dark:text-slate-100
+                    placeholder-slate-400 dark:placeholder-slate-500
+                    focus:bg-white dark:focus:bg-slate-950
+                    focus:border-nyaya-500
+                    focus:ring-4 focus:ring-nyaya-500/10
+                    rounded-3xl
+                    px-5 sm:px-6
+                    py-3
+                    outline-none
+                    transition-all
+                    text-sm sm:text-base
+                    min-h-[52px]
+                    max-h-[160px]
+                  "
                 />
                 <button
                   type="submit"
                   disabled={chatLoading || !chatInput.trim()}
                   className="bg-nyaya-600 text-white w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center hover:bg-nyaya-500 hover:shadow-lg transition-all disabled:opacity-40 disabled:hover:shadow-none shrink-0 cursor-pointer"
-                  aria-label="Send message"
                 >
                   <Send className="text-center w-5 h-5 sm:w-6 sm:h-6" />
                 </button>
@@ -345,9 +390,9 @@ export default function GeneralChat() {
             </div>
           </div>
 
-          <section className="z-10 w-full px-4 sm:px-6 pb-16 mx-auto max-w-7xl">
+          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 shrink-0 pb-6">
             <Footer />
-          </section>
+          </div>
         </main>
       </div>
     </div>
